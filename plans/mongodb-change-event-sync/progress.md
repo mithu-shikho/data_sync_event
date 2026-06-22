@@ -4,7 +4,7 @@ Status legend: ⬜ todo · 🟡 in-progress · ✅ done
 
 | Phase | Title | Status |
 |-------|-------|--------|
-| 00 | Bootstrap (module, deps, skeleton, docker-compose) | ⬜ |
+| 00 | Bootstrap (module, deps, skeleton, docker-compose) | ✅ |
 | 01 | Config + models + control store | ⬜ |
 | 02 | Publisher adapter + partitioning | ⬜ |
 | 03 | Watcher + Manager + resume tokens | ⬜ |

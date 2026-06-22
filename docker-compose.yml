@@ -1,0 +1,50 @@
+services:
+  # Source MongoDB — replica set (required for Change Streams).
+  source-mongo:
+    image: mongo:7
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27018:27017"
+    volumes:
+      - source_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # One-shot: initiate the source replica set, then exit.
+  source-mongo-init:
+    image: mongo:7
+    depends_on:
+      source-mongo:
+        condition: service_healthy
+    restart: "no"
+    entrypoint:
+      - bash
+      - -c
+      - |
+        mongosh --host source-mongo:27017 --quiet --eval '
+          try { rs.status() } catch (e) {
+            rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "source-mongo:27017" }] })
+          }'
+
+  # Control MongoDB — metadata store (connections, watches, resume_tokens, logs).
+  control-mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - control_data:/data/db
+
+  # NATS with JetStream enabled.
+  nats:
+    image: nats:2.10
+    command: ["-js", "-m", "8222"]
+    ports:
+      - "4222:4222"   # client
+      - "8222:8222"   # monitoring
+
+volumes:
+  source_data:
+  control_data:
